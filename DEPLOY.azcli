@@ -1,0 +1,27 @@
+file='Hub-and-Spoke.bicep'
+
+az deployment group create --name foo1 --resource-group $rgName --template-file $file \
+    --parameters \
+        deployPeering=false \
+        deployGateway=false \
+        deployRouting=false \
+        deployVm1=false \
+        deployVm2=false \
+        deployVm3=false \
+        deployVm4=false \
+        deployBastion=false \
+        deployFirewall=false 
+
+az deployment group list --resource-group $rgName --query "reverse(sort_by([].{Name:name,provisioningState:properties.provisioningState,timestamp:properties.timestamp}, &timestamp))" --output table
+
+uri="https://raw.githubusercontent.com/www42/arm/master/templates/empty.json"
+az deployment group create --name tabulaRasa01 --resource-group $rgName --mode Complete --template-uri $uri --no-wait
+
+
+az resource list --resource-group $rgName --query "sort_by([].{name:name,Type:type,location:location},&Type)" --output table
+
+az group create --name $rgName --location $location
+az group list --output table
+
+location='westeurope'
+rgName='Contoso-RG'
