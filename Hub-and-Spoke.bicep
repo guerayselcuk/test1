@@ -14,18 +14,14 @@ param location string = resourceGroup().location
 
 // Hub
 param hubName                    string = 'VNET1'
-/* does not work !
 param hubAddressSpace            array  = [
                                           '192.168.0.0/16'
-                                          '10.0.0.4/16'
+                                          '10.0.0.0/16'
                                           ]
-*/                                          
-param hubAddressSpace            string = '192.168.0.0/16'
 param hubSubnet1Name             string = 'VNET1-Subnet1'
 param hubSubnet1AddressPrefix    string = '192.168.0.0/24'
 param hubSubnet2Name             string = 'VNET1-Subnet2'
-// param hubSubnet2AddressPrefix    string = '10.0.0.0/24'
-param hubSubnet2AddressPrefix    string = '192.168.1.0/24'
+param hubSubnet2AddressPrefix    string = '10.0.0.0/24'
 param hubSubnet3Name             string = 'GatewaySubnet'       // Do not change!
 param hubSubnet3AddressPrefix    string = '192.168.255.0/27'
 param hubSubnet4Name             string = 'AzureBastionSubnet'  // Do not change!
@@ -34,12 +30,16 @@ param hubSubnet5Name             string = 'AzureFirewallSubnet' // Do not change
 param hubSubnet5AddressPrefix    string = '192.168.255.64/26'
 // Spoke 1
 param spoke1Name                 string = 'VNET2'
-param spoke1AddressSpace         string = '172.16.0.0/16'
+param spoke1AddressSpace         array  = [
+                                          '172.16.0.0/16'
+                                          ]
 param spoke1Subnet1Name          string = 'VNET2-Subnet1'
 param Spoke1Subnet1AddressPrefix string = '172.16.0.0/24'
 // Spoke 2
 param spoke2Name                 string = 'VNET3'
-param spoke2AddressSpace         string = '10.20.0.0/16'
+param spoke2AddressSpace         array  = [
+                                          '10.20.0.0/16'
+                                          ]
 param spoke2Subnet1Name          string = 'VNET3-Subnet1'
 param Spoke2Subnet1AddressPrefix string = '10.20.0.0/24'
 
@@ -58,9 +58,7 @@ resource hub 'Microsoft.Network/virtualNetworks@2020-08-01' = {
   location: location
   properties: {
     addressSpace: {
-      addressPrefixes: [
-        hubAddressSpace
-      ]
+      addressPrefixes: hubAddressSpace
     }
     subnets: [
       {
@@ -101,9 +99,7 @@ resource spoke1 'Microsoft.Network/virtualNetworks@2020-08-01' = {
   location: location
   properties: {
     addressSpace: {
-      addressPrefixes: [
-        spoke1AddressSpace
-      ]
+      addressPrefixes: spoke1AddressSpace
     }
     subnets: [
       {
@@ -120,9 +116,7 @@ resource spoke2 'Microsoft.Network/virtualNetworks@2020-08-01' = {
   location: location
   properties: {
     addressSpace: {
-      addressPrefixes: [
-        spoke2AddressSpace
-      ]
+      addressPrefixes: spoke2AddressSpace
     }
     subnets: [
       {
@@ -135,21 +129,57 @@ resource spoke2 'Microsoft.Network/virtualNetworks@2020-08-01' = {
   }
 }
 
-/*
 // Virtual Network Peerings
 resource hubSpoke1Peering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-08-01' = if (deployPeering) {
   name: '${hubName}/${hubName}-to-${spoke1Name}-Peering'
+  properties: {
+    remoteVirtualNetwork: {
+      id: spoke1.id
+    }
+    allowVirtualNetworkAccess: true
+    allowForwardedTraffic: true
+    allowGatewayTransit: true
+    useRemoteGateways: false
+  }
 }
 resource spoke1HubPeering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-08-01' = if (deployPeering) {
   name: '${spoke1Name}/${spoke1Name}-to-${hubName}-Peering'
+  properties: {
+    remoteVirtualNetwork: {
+      id: hub.id
+    }
+    allowVirtualNetworkAccess: true
+    allowForwardedTraffic: true
+    allowGatewayTransit: true
+    useRemoteGateways: false
+  }
 }
 resource hubSpoke2Peering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-08-01' = if (deployPeering) {
   name: '${hubName}/${hubName}-to-${spoke2Name}-Peering'
+  properties: {
+    remoteVirtualNetwork: {
+      id: spoke2.id
+    }
+    allowVirtualNetworkAccess: true
+    allowForwardedTraffic: true
+    allowGatewayTransit: true
+    useRemoteGateways: false
+  }
 }
 resource spoke2HubPeering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-08-01' = if (deployPeering) {
   name: '${spoke2Name}/${spoke2Name}-to-${hubName}-Peering'
+  properties: {
+    remoteVirtualNetwork: {
+      id: hub.id
+    }
+    allowVirtualNetworkAccess: true
+    allowForwardedTraffic: true
+    allowGatewayTransit: true
+    useRemoteGateways: false
+  }
 }
 
+/*
 // Virtual Gateway
 resource gateway 'Microsoft.Network/virtualNetworkGateways@2020-08-01' = if (deployGateway) {
   name: gatewayName
