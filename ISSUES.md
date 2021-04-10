@@ -1,5 +1,6 @@
-* Spoke to Hub peerings
+* useRemoteGateways
 
+In Spoke --> Hub peerings
 ```js
 useRemoteGateways: false  // should be 'true'
 ``` 
