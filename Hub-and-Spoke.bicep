@@ -42,8 +42,12 @@ param spoke2AddressSpace         array  = [
                                           ]
 param spoke2Subnet1Name          string = 'VNET3-Subnet1'
 param Spoke2Subnet1AddressPrefix string = '10.20.0.0/24'
-
+// Gateway
 param gatewayName                string = 'Gateway1'
+param gatewayAddressPool         string = '10.250.0.0/25'
+param gatewayRootCertName        string = 'rootcert'
+param gatewayRootCertPublicData  string = 'MIIC/TCCAeWgAwIBAgIQLkXhAXtvLpNLhIyjznYWvDANBgkqhkiG9w0BAQsFADAhMR8wHQYDVQQDDBZDb250b3NvUm9vdENlcnRpZmljYXRlMB4XDTIxMDQwMzE3MDYzM1oXDTIyMDQwMzE3MjYzM1owITEfMB0GA1UEAwwWQ29udG9zb1Jvb3RDZXJ0aWZpY2F0ZTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAPuJ3KWFvVYrewuSQxVelRbORNtNkSqMrHUj9N73XzkxEBODjfb3IJd/bGNNn70Z9YUDElFbKEVfHs2icZfCqiLNT4ejnN49La/Zp17qYDumFtiUErc5PVJA8Op1swURcFeHeuHsZdq1ADi8+M51o4nWFh80mJay2g/GUwE0UxOyDNerVLIXkZPQ89UngKb3cZN7TtCQXW6CJGMFLY07KbNiwpQuFg9DbxVR0bOoMi2MgnYalweBt/JHCMwLFfzZ4DwuNVYwGWFtnaBjTv5XgBQrxVvXzCxHUXhznSLClqJ8PTTTM6ZgPC4l1BuIVWZfyI5S3WdvyT8dhVmpVTaQc/kCAwEAAaMxMC8wDgYDVR0PAQH/BAQDAgIEMB0GA1UdDgQWBBRfYo+dRHQ5rVdtOyo27ez1Odc5ijANBgkqhkiG9w0BAQsFAAOCAQEArg3ElQzE8537qJUGQIvYU1JwI6tpeyBta7bmV3qg8G0ha02rn7gPJHpLhwgVhQU3kuFm0+Lfyza8Jk3PMSCueD80MKocxnEd9m147lCDBbTmXHAWe5OcaW8fzemf574jxl1XVS2/4FBvU0/Al6XwneRcRblr0mvhhiUbWBu9dhWSIkqnvOqu6zPbJIIwaXcV7qZ0e1GthI/QL4jSu02XtogJ01ESTWvJPFYntoWsuk5R/2z6gAImQvb9PAhm7nAqz8MkXmcfQFmo7VYiiL1+tzAVryAqNkQFKrJnR368xGIFzKLF/YNqOYPn0xYNfL9rIoi+yMT7fgq61U/4Cj/AKA=='
+
 param routeTableName             string = 'Table1'
 param bastionName                string = 'Bastion1'
 param firewallName               string = 'Firewall1'
@@ -179,15 +183,64 @@ resource spoke2HubPeering 'Microsoft.Network/virtualNetworks/virtualNetworkPeeri
   }
 }
 
-/*
 // Virtual Gateway
 resource gateway 'Microsoft.Network/virtualNetworkGateways@2020-08-01' = if (deployGateway) {
   name: gatewayName
   location: location
   properties: {
-    
+    gatewayType: 'Vpn'
+    vpnType: 'RouteBased'
+    vpnGatewayGeneration: 'Generation1'
+    sku: {
+      name: 'VpnGw1'
+      tier: 'VpnGw1'
+    }
+    ipConfigurations: [
+      {
+        name: 'ipConfig1'
+        properties: {
+          publicIPAddress: {
+            id: gatewayPip.id
+          }
+          subnet: {
+            id: hub.properties.subnets[2].id
+          }
+        }
+      }
+    ]
+    vpnClientConfiguration: {
+      vpnClientAddressPool: {
+        addressPrefixes: [
+          gatewayAddressPool
+        ]
+      }
+      vpnClientProtocols: [
+        'SSTP'
+        'IkeV2'
+      ]
+      vpnClientRootCertificates: [
+        {
+          name: gatewayRootCertName
+          properties: {
+            publicCertData: gatewayRootCertPublicData
+          }
+        }
+      ]
+    }
   }
 }
+resource gatewayPip 'Microsoft.Network/publicIPAddresses@2020-08-01' = if (deployGateway) {
+  name: '${gatewayName}-Pip'
+  location: location
+  sku: {
+    name: 'Basic'    
+  }
+  properties: {
+    publicIPAllocationMethod: 'Dynamic'
+  }
+}
+
+/*
 // Routing
 resource routeTable 'Microsoft.Network/routeTables@2020-08-01' = if (deployRouting) {
   name: routeTableName
