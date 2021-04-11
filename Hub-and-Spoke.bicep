@@ -1,6 +1,5 @@
 // Parameters to customize deployment
 param deployPeering  bool = true
-param deployGateway  bool = true
 param deployRouting  bool = true
 param deployVm1      bool = true
 param deployVm2      bool = true
@@ -34,14 +33,14 @@ param spoke1AddressSpace         array  = [
                                           '172.16.0.0/16'
                                           ]
 param spoke1Subnet1Name          string = 'VNET2-Subnet1'
-param Spoke1Subnet1AddressPrefix string = '172.16.0.0/24'
+param spoke1Subnet1AddressPrefix string = '172.16.0.0/24'
 // Spoke 2
 param spoke2Name                 string = 'VNET3'
 param spoke2AddressSpace         array  = [
                                           '10.20.0.0/16'
                                           ]
 param spoke2Subnet1Name          string = 'VNET3-Subnet1'
-param Spoke2Subnet1AddressPrefix string = '10.20.0.0/24'
+param spoke2Subnet1AddressPrefix string = '10.20.0.0/24'
 // Gateway
 param gatewayName                string = 'Gateway1'
 param gatewayAddressPool         string = '10.250.0.0/25'
@@ -69,6 +68,9 @@ resource hub 'Microsoft.Network/virtualNetworks@2020-08-01' = {
         name: hubSubnet1Name
         properties: {
           addressPrefix: hubSubnet1AddressPrefix
+          routeTable: {
+            id: routeTable.id
+          }
         }
       }
       {
@@ -109,7 +111,10 @@ resource spoke1 'Microsoft.Network/virtualNetworks@2020-08-01' = {
       {
         name: spoke1Subnet1Name
         properties: {
-          addressPrefix: Spoke1Subnet1AddressPrefix
+          addressPrefix: spoke1Subnet1AddressPrefix
+          routeTable: {
+            id: routeTable.id
+          }
         }
       }
     ]
@@ -126,7 +131,10 @@ resource spoke2 'Microsoft.Network/virtualNetworks@2020-08-01' = {
       {
         name: spoke2Subnet1Name
         properties: {
-          addressPrefix: Spoke2Subnet1AddressPrefix
+          addressPrefix: spoke2Subnet1AddressPrefix
+          routeTable: {
+            id: routeTable.id
+          }
         }
       }
     ]
@@ -155,8 +163,11 @@ resource spoke1HubPeering 'Microsoft.Network/virtualNetworks/virtualNetworkPeeri
     allowVirtualNetworkAccess: true
     allowForwardedTraffic: true
     allowGatewayTransit: true
-    useRemoteGateways: false
+    useRemoteGateways: true
   }
+  dependsOn: [
+    gateway
+  ]
 }
 resource hubSpoke2Peering 'Microsoft.Network/virtualNetworks/virtualNetworkPeerings@2020-08-01' = if (deployPeering) {
   name: '${hubName}/${hubName}-to-${spoke2Name}-Peering'
@@ -179,12 +190,15 @@ resource spoke2HubPeering 'Microsoft.Network/virtualNetworks/virtualNetworkPeeri
     allowVirtualNetworkAccess: true
     allowForwardedTraffic: true
     allowGatewayTransit: true
-    useRemoteGateways: false
+    useRemoteGateways: true
   }
+  dependsOn: [
+    gateway
+  ]
 }
 
 // Virtual Gateway
-resource gateway 'Microsoft.Network/virtualNetworkGateways@2020-08-01' = if (deployGateway) {
+resource gateway 'Microsoft.Network/virtualNetworkGateways@2020-08-01' = {
   name: gatewayName
   location: location
   properties: {
@@ -229,7 +243,7 @@ resource gateway 'Microsoft.Network/virtualNetworkGateways@2020-08-01' = if (dep
     }
   }
 }
-resource gatewayPip 'Microsoft.Network/publicIPAddresses@2020-08-01' = if (deployGateway) {
+resource gatewayPip 'Microsoft.Network/publicIPAddresses@2020-08-01' = {
   name: '${gatewayName}-Pip'
   location: location
   sku: {
@@ -240,13 +254,38 @@ resource gatewayPip 'Microsoft.Network/publicIPAddresses@2020-08-01' = if (deplo
   }
 }
 
-/*
 // Routing
 resource routeTable 'Microsoft.Network/routeTables@2020-08-01' = if (deployRouting) {
   name: routeTableName
   location: location
+  properties: {
+    routes:[
+      {
+        name: 'Route-to-${hubSubnet1Name}'
+        properties: {
+          nextHopType: 'VirtualNetworkGateway'
+          addressPrefix: hubSubnet1AddressPrefix
+        }
+      }
+      {
+        name: 'Route-to-${spoke1Subnet1Name}'
+        properties: {
+          nextHopType:'VirtualNetworkGateway'
+          addressPrefix: spoke1Subnet1AddressPrefix
+        }
+      }
+      {
+        name: 'Route-to-${spoke2Subnet1Name}'
+        properties: {
+          nextHopType: 'VirtualNetworkGateway'
+          addressPrefix: spoke2Subnet1AddressPrefix
+        }
+      }
+    ]
+  }
 }
 
+/*
 // Virtual Machines
 resource vm1 'Microsoft.Compute/virtualMachines@2020-12-01' = if (deployVm1) {
   name: vm1Name

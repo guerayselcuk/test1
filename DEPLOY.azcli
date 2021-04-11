@@ -1,10 +1,9 @@
 file='Hub-and-Spoke.bicep'
 
-az deployment group create --name gateway1 --resource-group $rgName --template-file $file \
+az deployment group create --name routing3 --resource-group $rgName --template-file $file \
     --parameters \
         deployPeering=true \
-        deployGateway=true \
-        deployRouting=false \
+        deployRouting=true \
         deployVm1=false \
         deployVm2=false \
         deployVm3=false \
