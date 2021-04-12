@@ -1,6 +1,6 @@
 file='Hub-and-Spoke.bicep'
 
-az deployment group create --name vms2 --resource-group $rgName --template-file $file \
+az deployment group create --name ext1 --resource-group $rgName --template-file $file \
     --parameters \
         deployPeering=true \
         deployRouting=true \
@@ -14,7 +14,7 @@ az deployment group create --name vms2 --resource-group $rgName --template-file 
 az deployment group list --resource-group $rgName --query "reverse(sort_by([].{Name:name,provisioningState:properties.provisioningState,duration:properties.duration,timestamp:properties.timestamp}, &timestamp)) | [0:4]" --output table
 
 uri="https://raw.githubusercontent.com/www42/arm/master/templates/empty.json"
-az deployment group create --name tabulaRasa04 --resource-group $rgName --mode Complete --template-uri $uri --no-wait
+az deployment group create --name tabulaRasa05 --resource-group $rgName --mode Complete --template-uri $uri --no-wait
 
 
 az resource list --resource-group $rgName --query "sort_by([].{name:name,Type:type,location:location},&Type)" --output table
