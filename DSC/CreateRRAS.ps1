@@ -1,4 +1,4 @@
-configuration RRAS
+configuration CreateRRAS
 {
     node ("localhost")
     {

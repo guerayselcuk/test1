@@ -328,6 +328,20 @@ resource vm1 'Microsoft.Compute/virtualMachines@2020-12-01' = if (deployVm1) {
     }
   }
 }
+resource vm1Dsc 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
+  parent: vm1
+  name: 'CreateRRAS'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Powershell'
+    type: 'DSC'
+    typeHandlerVersion: '2.19'
+    autoUpgradeMinorVersion: true
+    settings: {
+      ModulesUrl: '${deployment().properties.templateLink.uri}/DSC/CreateRRAS.zip'
+    }
+  }
+}
 resource vm1Nic 'Microsoft.Network/networkInterfaces@2020-11-01' = if (deployVm1) {
   name: '${vm1Name}-Nic'
   location: location
