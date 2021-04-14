@@ -13,7 +13,7 @@
 #        deployFirewall=$false 
 
 $file = 'VM.bicep'
-az deployment group create --name vm3 --resource-group $rgName --template-file $file
+az deployment group create --name vm5 --resource-group $rgName --template-file $file
 
 
 # List deployment history
@@ -21,7 +21,7 @@ az deployment group list --resource-group $rgName --query --% "reverse(sort_by([
 
 # Delete all resources of resource group
 $uri="https://raw.githubusercontent.com/www42/arm/master/templates/empty.json"
-az deployment group create --name tabulaRasa06 --resource-group $rgName --mode Complete --template-uri $uri --no-wait
+az deployment group create --name tabulaRasa07 --resource-group $rgName --mode Complete --template-uri $uri --no-wait
 
 # List all resources of resource group
 az resource list --resource-group $rgName --query --% "sort_by([].{name:name,Type:type,location:location},&Type)" --output table
