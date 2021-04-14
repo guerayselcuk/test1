@@ -338,7 +338,7 @@ resource vm1Dsc 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
     typeHandlerVersion: '2.19'
     autoUpgradeMinorVersion: true
     settings: {
-      ModulesUrl: '${deployment().properties.templateLink.uri}/DSC/CreateRRAS.zip'
+      ModulesUrl: 'https://raw.githubusercontent.com/www42/test1/dsc/DSC/dscConfigs.zip'
     }
   }
 }
