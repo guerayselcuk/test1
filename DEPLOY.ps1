@@ -1,16 +1,20 @@
 # Deploy Bicep file to resource group
-$file='Hub-and-Spoke.bicep'
+#$file='Hub-and-Spoke.bicep'
 
-az deployment group create --name ext1 --resource-group $rgName --template-file $file `
-    --parameters `
-        deployPeering=$true `
-        deployRouting=$true `
-        deployVm1=$true `
-        deployVm2=$false `
-        deployVm3=$false `
-        deployVm4=$false `
-        deployBastion=$true `
-        deployFirewall=$false 
+#az deployment group create --name ext1 --resource-group $rgName --template-file $file `
+#    --parameters `
+#        deployPeering=$true `
+#        deployRouting=$true `
+#        deployVm1=$true `
+#        deployVm2=$false `
+#        deployVm3=$false `
+#        deployVm4=$false `
+#        deployBastion=$true `
+#        deployFirewall=$false 
+
+$file = 'VM.bicep'
+az deployment group create --name vm3 --resource-group $rgName --template-file $file
+
 
 # List deployment history
 az deployment group list --resource-group $rgName --query --% "reverse(sort_by([].{Name:name,provisioningState:properties.provisioningState,duration:properties.duration,timestamp:properties.timestamp}, &timestamp)) | [0:4]" --output table
@@ -31,4 +35,4 @@ $rgName='Contoso-RG'
 
 
 # Zip DSC configurations
-Compress-Archive -Path DSC/*.ps1 -DestinationPath DSC/dscConfigs.zip -Force
+Compress-Archive -Path DSC/InstallRRAS.ps1 -DestinationPath DSC/dscConfigs.zip -Force
