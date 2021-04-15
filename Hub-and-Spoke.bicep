@@ -328,20 +328,6 @@ resource vm1 'Microsoft.Compute/virtualMachines@2020-12-01' = if (deployVm1) {
     }
   }
 }
-resource vm1Dsc 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
-  parent: vm1
-  name: 'CreateRRAS'
-  location: location
-  properties: {
-    publisher: 'Microsoft.Powershell'
-    type: 'DSC'
-    typeHandlerVersion: '2.19'
-    autoUpgradeMinorVersion: true
-    settings: {
-      ModulesUrl: 'https://raw.githubusercontent.com/www42/test1/dsc/DSC/dscConfigs.zip'
-    }
-  }
-}
 resource vm1Nic 'Microsoft.Network/networkInterfaces@2020-11-01' = if (deployVm1) {
   name: '${vm1Name}-Nic'
   location: location
@@ -409,6 +395,24 @@ resource vm2Nic 'Microsoft.Network/networkInterfaces@2020-11-01' = if (deployVm2
         }
       }
     ]
+  }
+}
+resource vm2Dsc 'Microsoft.Compute/virtualMachines/extensions@2020-12-01' = {
+  parent: vm2
+  name: 'InstallRRAS'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Powershell'
+    type: 'DSC'
+    typeHandlerVersion: '2.19'
+    autoUpgradeMinorVersion: true
+    settings: {
+      configuration: {
+        url: 'https://raw.githubusercontent.com/www42/test1/dsc/DSC/dscConfigs.zip'
+        script: 'InstallRRAS.ps1'
+        function: 'InstallRRAS'
+      }
+    }
   }
 }
 //   VM3
